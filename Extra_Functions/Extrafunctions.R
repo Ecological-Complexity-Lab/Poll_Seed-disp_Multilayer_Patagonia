@@ -56,7 +56,6 @@ CreateFiles=function(networkD,networkP)
   Polinizadores=row.names(networkP)
   Dispersores=row.names(networkD)
   
-  #mismo orden para la plantas
   networkD=networkD %>% select(Plantas)
   
   n.plantas=length(Plantas)
@@ -64,19 +63,20 @@ CreateFiles=function(networkD,networkP)
   n.dispersores=length(Dispersores)
   n.nodos=n.plantas+n.polinizadores+n.dispersores
   
-  #Create edges list of plant-pollinator layer --
+  #1. Create edge list ---------------------------
   
+  #Create edges list of plant-pollinator layer ----
   nodeFrom=c()
   nodeTo=c()
   weight=c()
   
-  for (i in 1:n.plantas)#para cada palnta for 1 a n, fijate los pesos que son positivos #y guardate quienes son esos polinizadores "quienes"
-  {
-    edges.tpm=networkP[,i]>0 #para la fila uno, ver todos los valores de las columnas que son amyores a 1
+  for (i in 1:n.plantas)
+  { #Save pollinators that have at least one interaction
+    edges.tpm=networkP[,i]>0 
     quienes.tmp=which(edges.tpm)
     
-    for (j in quienes.tmp) #para cada polinizadores que esta en "quienes",  #guardo el nombre dle nodo y el peso
-    {
+    for (j in quienes.tmp) 
+    {#Save the name of the plant interacting with each pollinator and the weight of the interaction
       nodeFrom=c(nodeFrom,i)
       nodeTo=c(nodeTo,j)
       weight=c(weight,as.numeric(networkP[,i][j]))
@@ -84,24 +84,22 @@ CreateFiles=function(networkD,networkP)
     
   }
   
-  nodeTo=nodeTo+n.plantas #lo que le digo ac? es dejarle un espacio para las plantas y
-  #empezar del x (polinizadores van del x al tanto), y lo copiamos en un dataframe:
+  nodeTo=nodeTo+n.plantas #Correct for the pollinator id
   
-  Edges.List1=as.data.frame(cbind(nodeFrom,nodeTo,weight))
+  Edges.List1=as.data.frame(cbind(nodeFrom,nodeTo,weight))#data frame containing intralayer edges of plant-pollination layer
   
-#Create edge list of plant-seed disperser layer --
-  
+#Create edge list of plant-seed disperser layer ----
   nodeFrom=c()
   nodeTo=c()
   weight=c()
   
   for (i in 1:n.plantas)
-  {
+  {#Save seed dispersers that have at least one interaction
     edges.tpm=networkD[,i]>0
     quienes.tmp=which(edges.tpm)
     
     for (j in quienes.tmp)
-    {
+    {#Save the name of the plant interacting with each seed disperser and the weight of the interaction
       nodeFrom=c(nodeFrom,i)
       nodeTo=c(nodeTo,j)
       weight=c(weight,as.numeric(networkD[,i][j]))
@@ -109,16 +107,16 @@ CreateFiles=function(networkD,networkP)
     
   }
   
-  nodeTo=nodeTo+n.plantas+n.polinizadores
+  nodeTo=nodeTo+n.plantas+n.polinizadores #Correct for the seed disperser id
   
-  Edges.List2=as.data.frame(cbind(nodeFrom,nodeTo,weight))
+  Edges.List2=as.data.frame(cbind(nodeFrom,nodeTo,weight)) #data frame containing intralayer edges of plant-seed disperser layer
   
   
-  ###agregamos el ID de las capas a cada lista intra
-  
-  Nlayer1=rep(1,nrow(Edges.List1)) #creamos el vector queva a corresponder a la columna layer 1 (polinizacion) (rep significa que se repite el valor 1 -capa 1- en todas las filas; nrow es la cantidad filas que va a tener el vector ( = cant. de conexiones ne la primer capa
+  #we create vectors with the ID of each layer (pollination layer = 1, seed disperser layer = 2)
+  Nlayer1=rep(1,nrow(Edges.List1)) 
   Nlayer2=rep(2,nrow(Edges.List2))
   
+  #add the vectors to the edge lists created before
   Extend1=data.frame('layer_from'=as.integer(Nlayer1),
                      "node_from"=as.integer(Edges.List1[,1]),
                      'layer_to'=as.integer(Nlayer1),
@@ -132,50 +130,46 @@ CreateFiles=function(networkD,networkP)
                      'weight'=Edges.List2[,3])
   
  
-  #Create weigthed interlayer edges (Prop path = Npath/Total path) --
+  #Create interlayer edge list ----
   
-  #select the plant present in both layers 
+  #select those plants  interacting within each layer
   Qplan1=which(vapply(networkD,sum,1)>0)
   Qplan2=which(vapply(networkP,sum,1)>0)
   
-  #creamos el vector quienes inter con la identidad de las plantas y cuantificamos
-  #las plantas que conectan ambos procesos
+  #identify those plants common to both layers
   quienes.inter=Qplan2[Qplan2%in%Qplan1] 
-  P = vector(mode="numeric", length((quienes.inter)))# aca creamos el vector para guardar el numero de pol de cada planta que une ambas capas
-  D = vector(mode="numeric", length((quienes.inter)))#vector donde guardamos el Ndisp con los que interactua cada planta que unen ambas capas
+  P = vector(mode="numeric", length((quienes.inter)))
+  D = vector(mode="numeric", length((quienes.inter)))
   
-   #Loop para calcular el peso entre capa de cada planta compartidas
-
-  for (j in seq_along(quienes.inter)){
-    nodeP=quienes.inter[j]
-    P[j]=as.numeric(Extend1 %>% filter(node_from ==nodeP)  %>% summarise(n = n())) #calculamos el num de pol que interactua con cada planta que conecta ambas capas
-    D[j]=as.numeric(Extend2 %>% filter(node_from ==nodeP)  %>% summarise(n = n())) #calculamos el num de disp que interactua con cada planta que conecta ambas capas
+  for (j in seq_along(quienes.inter)){#calculate the number of pol and seed disperser interacting with plants connecting layers
+    nodeP=quienes.inter[j] 
+    P[j]=as.numeric(Extend1 %>% filter(node_from ==nodeP)  %>% summarise(n = n())) 
+    D[j]=as.numeric(Extend2 %>% filter(node_from ==nodeP)  %>% summarise(n = n())) 
   } 
   
-  W = P*D #Calculate the number of path per plant species connecting both layers
+  W = P*D #number of path per plant species connecting both layers
   
-  cuan.inter=length(quienes.inter)# create the vector containing the Num path/Total path
+  cuan.inter=length(quienes.inter)
   for (i in seq_along(W)){
-    cuan.inter[i] = W[i]/ (n.polinizadores*n.dispersores) 
+    cuan.inter[i] = W[i]/ (n.polinizadores*n.dispersores)#calculate the proportion of path per plant species 
   }
   
-  #creamos el archivo de interacciones inter
+  #dataframe containing interlayer edges
   extendInter=data.frame("layer_from"=as.integer(rep(1,length(cuan.inter))),'node_from'=as.integer(quienes.inter),
                          'layer_to'=as.integer(rep(2,length(cuan.inter))),'node_to'=as.integer(quienes.inter),
                          "weight"=as.numeric(cuan.inter))
   
-  #unimos enlaces intra y inter en un archivo
+  #join all dataframe together
   AllExtend=rbind(Extend1,Extend2,extendInter)
   
-  ### Layers info 
+  
+  #2. layer info ---------------------------
   layerID=c(1,2)
   layerLabel=c("PlantaPol","PlantaDisp")
   LayerInfo=data.frame('layer_id'=as.integer(layerID),'name_layer'=layerLabel)
   
-  
-  ### Nodes info 
-  
-  nodeID=seq(1,n.nodos) #  Primeros plantas , luego polinizadores , luego dispersores 
+  #3. layer info ---------------------------
+  nodeID=seq(1,n.nodos) 
   nodeLabel=c(Plantas,Polinizadores,Dispersores)
   NodesInfo=data.frame('node_id'=nodeID,'name_node'=nodeLabel)
   
