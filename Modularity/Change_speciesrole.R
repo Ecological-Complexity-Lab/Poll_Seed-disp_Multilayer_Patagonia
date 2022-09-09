@@ -1,0 +1,453 @@
+#In this file we:
+
+########### 1. Add the plant's name to the species role list for each treatment and merge them together
+
+########### 2. Evaluate if the structural role of species changes between treatments
+
+library(infomapecology)
+library(dplyr)
+library(vegan)
+source('/Users/agustin/Documents/GitHub/Multilayer_Ecology-letters/Extra_Functions/Extrafunctions.R')
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#       1. Add the plant's name to the species role list for each treatment                            
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+####### NI Treatment --
+
+#Upload matrices -
+super_list_NI <- read.csv("/Users/agustin/Documents/GitHub/Multilayer_Ecology-letters/Modularity/NI_super_list.csv", row.names = 1)
+NI_disp<- read.csv("/Users/agustin/Documents/GitHub/Multilayer_Ecology-letters/Data/NI_disp.csv", sep=",",row.names=1)
+NI_pol <- read.csv("/Users/agustin/Documents/GitHub/Multilayer_Ecology-letters/Data/NI_pol.csv", sep=",",row.names=1)
+
+Ndisp=NI_disp
+Npol=NI_pol
+super_list = super_list_NI 
+
+#Call function to change the network' edges to proportions
+PropNetPol=ToProp(Npol) 
+PropNetDisp=ToProp(Ndisp)
+
+#Call function to create the network edge list
+files=CreateFiles(Ndisp,Npol) 
+Edges=files$Edges.info
+Nodes=files$Nodes.info
+Layers=files$Layers.info
+
+List_sp<-as.data.frame(Nodes$name_node)#list of plant's name
+super_list$node_id <-as.factor(super_list$node_id)
+levels(super_list$node_id)<- Nodes$name_node #assign species name to node id
+
+super_list_NI<-super_list #list of species role with plant names 
+
+
+####### I Treatment --
+
+#Upload matrices -
+super_list_I <- read.csv("/Users/agustin/Documents/GitHub/Multilayer_Ecology-letters/Modularity/I_super_list.csv", row.names = 1)
+I_disp<- read.csv("/Users/agustin/Documents/GitHub/Multilayer_Ecology-letters/Data/I_disp.csv", sep=",",row.names=1)
+I_pol <- read.csv("/Users/agustin/Documents/GitHub/Multilayer_Ecology-letters/Data/I_pol.csv", sep=";",row.names=1)
+
+Ndisp=I_disp
+Npol=I_pol
+super_list = super_list_I 
+
+#Call function to change the network' edges to proportions
+PropNetPol=ToProp(Npol) 
+PropNetDisp=ToProp(Ndisp)
+
+#Call function to create the network edge list
+files=CreateFiles(Ndisp,Npol) 
+Edges=files$Edges.info
+Nodes=files$Nodes.info
+Layers=files$Layers.info
+
+List_sp<-as.data.frame(Nodes$name_node)#list of plant's name
+super_list$node_id <-as.factor(super_list$node_id)
+levels(super_list$node_id)<- Nodes$name_node #assign species name to node id
+
+super_list_I<-super_list #list of species role with plant names 
+
+#Merge both dataframe
+super_list_final <- rbind(super_list_NI, super_list_I)
+super_list_treat<- cbind(Treat = rep(c("NI","I"), c(nrow(super_list_NI),nrow(super_list_I))),super_list_final)
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#     2. Evaluate if the structural role of species changes between treatments                          
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+#create the function to calculate distance
+euclidean_distance <- function(x,y) {sqrt((x[2] - x[1])**2 + (y[2] - y[1])**2) }
+
+#calculate proportions
+Prop<-super_list_treat %>% 
+  group_by(Treat,role) %>% 
+  summarise(n = n()) %>%
+  mutate(freq = n / sum(n))
+
+Prop_trophic<-super_list_treat %>% 
+  group_by(Treat,role, type) %>% 
+  summarise(n = n()) %>%
+  mutate(freq = n / sum(n))
+
+
+#Change of structural role of pollinator species--
+
+# list of pollinators that appear in more than one treatment
+n_pol <- super_list_treat %>% 
+  filter(type =="Pol" ) %>% 
+  filter(duplicated(node_id)) %>% 
+  select(node_id)
+
+# count role changes
+distances <- c()
+longest_steps <- c()
+change_count <- c()
+switched <- c()
+role_changes <- matrix(0L, nrow = 4, ncol = 4, 
+                       dimnames = list(c('P', 'C', 'MH', 'NH'), c('P', 'C', 'MH', 'NH')))
+
+super_list_pol<- super_list_treat %>% 
+  filter(node_id%in%n_pol$node_id) #we identify and select the pollinator species
+
+
+for (i in unique(super_list_pol$node_id)) {
+  physical_i <- filter(super_list_pol, node_id == i) 
+  if (length(physical_i$Treat) > 1) {
+    i_steps <-c()
+    d_total_i <- 0
+    i_change_count <- 0
+    for (l in 1:(length(physical_i$Treat)-1)) {
+      role_change <- c() #avoid double counts
+      #  
+      d <- euclidean_distance(physical_i[l:(l+1),]$c_score, physical_i[l:(l+1),]$z_score)
+      i_steps[l] <- d
+      d_total_i <- d_total_i + d
+      l_role <- physical_i$role[l]
+      next_role <- physical_i$role[l+1]
+      if (next_role != l_role) {i_change_count <- i_change_count + 1}
+      # also count cases when the role stayed the same
+      role_change <- case_when(l_role == 'peripheral' & next_role == 'connector' ~ c(1,2),
+                               l_role == 'peripheral' & next_role == 'module hub' ~ c(1,3),
+                               l_role == 'peripheral' & next_role == 'network hub' ~ c(1,4),
+                               l_role == 'connector' & next_role == 'peripheral' ~ c(2,1),
+                               l_role == 'connector' & next_role == 'module hub' ~ c(2,3),
+                               l_role == 'connector' & next_role == 'network hub' ~ c(2,4),
+                               l_role == 'module hub' & next_role == 'peripheral' ~ c(3,1),
+                               l_role == 'module hub' & next_role == 'connector' ~ c(3,2),
+                               l_role == 'module hub' & next_role == 'network hub' ~ c(3,4),
+                               l_role == 'network hub' & next_role == 'peripheral' ~ c(4,1),
+                               l_role == 'network hub' & next_role == 'connector' ~ c(4,2),
+                               l_role == 'network hub' & next_role == 'module hub' ~ c(4,3),
+                               l_role == 'peripheral' & next_role == 'peripheral' ~ c(1,1),
+                               l_role == 'connector' & next_role == 'connector' ~ c(2,2),
+                               l_role == 'module hub' & next_role == 'module hub' ~ c(3,3),
+                               l_role == 'network hub' & next_role == 'network hub' ~ c(4,4))
+      role_changes[role_change[1], role_change[2]] <- role_changes[role_change[1], role_change[2]] + 1
+      
+    }      
+    distances[i] <- d_total_i / length(physical_i$Treat) #divide by number of layers the node is in
+    longest_steps[i] <- max(i_steps)
+    change_count[i] <- i_change_count / length(physical_i$Treat) #divide number of changes by number of layers
+    switched[i] <- case_when(i_change_count > 0 ~ T, i_change_count == 0 ~ F)
+  }
+}
+
+node_stats <- as.data.frame(cbind(n_pol$node_id, distances, change_count, longest_steps, switched)) 
+names(node_stats) <- c('node_id', 'total_distance', 'change_count', 'longest_steps', 'switched')
+node_stats <- node_stats [-nrow(node_stats),]
+node_stats$switched <- as.logical(node_stats$switched) 
+count_role_changes_pol<- list()
+count_role_changes_pol$matrix <- role_changes
+count_role_changes_pol$node_stats <- node_stats
+rm(node_stats, role_changes, physical_i)
+
+p_switched <- sum(count_role_changes_pol$node_stats$switched, na.rm = TRUE) / length(n_pol$node_id)# Proportion of pollinator species that 
+#changed their role
+
+#Plot-
+role_graph <- graph_from_adjacency_matrix(count_role_changes_pol$matrix ,weighted = T, diag = T)
+lay <- layout_in_circle(role_graph)
+par(mar=c(6, 4, 4, 2))
+plot.igraph(role_graph, vertex.size = 50, vertex.color = 'grey87', 
+            vertex.label.color = 'black', vertex.shape = 'circle', 
+            edge.color = 'red', edge.width=sqrt(E(role_graph)$weight),
+            edge.curved = T, edge.arrow.size = 1,
+            edge.label.x = c(1.40,0.22, 0.82, 0.66),
+            edge.label.y = -0.15,
+            edge.label = E(role_graph)$weight, edge.label.cex = 1.5,
+            layout = lay,
+            main = 'Number of Role Changes - Pollinators')
+
+
+#Change of structural role of seed disperser species--
+
+# list of dispersers that appear in more than one treatment
+n_disp <- super_list_treat %>% 
+  filter(type =="Disp" ) %>% 
+  filter(duplicated(node_id)) %>% 
+  select(node_id)
+
+# count role changes
+distances <- c()
+longest_steps <- c()
+change_count <- c()
+switched <- c()
+role_changes <- matrix(0L, nrow = 4, ncol = 4, 
+                       dimnames = list(c('P', 'C', 'MH', 'NH'), c('P', 'C', 'MH', 'NH')))
+
+super_list_disp<- super_list_treat %>% 
+  filter(node_id%in%n_disp$node_id) #we identify and select the seed disperser species
+
+
+for (i in unique(super_list_disp$node_id)) {
+  physical_i <- filter(super_list_disp, node_id == i) 
+  if (length(physical_i$Treat) > 1) {
+    i_steps <-c()
+    d_total_i <- 0
+    i_change_count <- 0
+    for (l in 1:(length(physical_i$Treat)-1)) {
+      role_change <- c() #avoid double counts
+      #  
+      d <- euclidean_distance(physical_i[l:(l+1),]$c_score, physical_i[l:(l+1),]$z_score)
+      i_steps[l] <- d
+      d_total_i <- d_total_i + d
+      l_role <- physical_i$role[l]
+      next_role <- physical_i$role[l+1]
+      if (next_role != l_role) {i_change_count <- i_change_count + 1}
+      # also count cases when the role stayed the same
+      role_change <- case_when(l_role == 'peripheral' & next_role == 'connector' ~ c(1,2),
+                               l_role == 'peripheral' & next_role == 'module hub' ~ c(1,3),
+                               l_role == 'peripheral' & next_role == 'network hub' ~ c(1,4),
+                               l_role == 'connector' & next_role == 'peripheral' ~ c(2,1),
+                               l_role == 'connector' & next_role == 'module hub' ~ c(2,3),
+                               l_role == 'connector' & next_role == 'network hub' ~ c(2,4),
+                               l_role == 'module hub' & next_role == 'peripheral' ~ c(3,1),
+                               l_role == 'module hub' & next_role == 'connector' ~ c(3,2),
+                               l_role == 'module hub' & next_role == 'network hub' ~ c(3,4),
+                               l_role == 'network hub' & next_role == 'peripheral' ~ c(4,1),
+                               l_role == 'network hub' & next_role == 'connector' ~ c(4,2),
+                               l_role == 'network hub' & next_role == 'module hub' ~ c(4,3),
+                               l_role == 'peripheral' & next_role == 'peripheral' ~ c(1,1),
+                               l_role == 'connector' & next_role == 'connector' ~ c(2,2),
+                               l_role == 'module hub' & next_role == 'module hub' ~ c(3,3),
+                               l_role == 'network hub' & next_role == 'network hub' ~ c(4,4))
+      role_changes[role_change[1], role_change[2]] <- role_changes[role_change[1], role_change[2]] + 1
+      
+    }      
+    distances[i] <- d_total_i / length(physical_i$Treat) #divide by number of layers the node is in
+    longest_steps[i] <- max(i_steps)
+    change_count[i] <- i_change_count / length(physical_i$Treat) #divide number of changes by number of layers
+    switched[i] <- case_when(i_change_count > 0 ~ T, i_change_count == 0 ~ F)
+  }
+}
+
+node_stats <- as.data.frame(cbind(n_disp$node_id, distances, change_count, longest_steps, switched)) 
+names(node_stats) <- c('node_id', 'total_distance', 'change_count', 'longest_steps', 'switched')
+node_stats <- node_stats [-nrow(node_stats),]
+node_stats$switched <- as.logical(node_stats$switched) 
+count_role_changes_disp<- list()
+count_role_changes_disp$matrix <- role_changes
+count_role_changes_disp$node_stats <- node_stats
+rm(node_stats, role_changes, physical_i)
+
+p_switched <- sum(count_role_changes_disp$node_stats$switched, na.rm = TRUE) / length(n_disp$node_id)#Proportion of seed disperser species that 
+#changed their role
+
+#Plot-
+role_graph <- graph_from_adjacency_matrix(count_role_changes_disp$matrix ,weighted = T, diag = T)
+lay <- layout_in_circle(role_graph)
+par(mar=c(6, 4, 4, 2))
+plot.igraph(role_graph,vertex.size = 50, vertex.color = 'grey87', 
+            vertex.label.color = 'black', vertex.shape = 'circle', 
+            edge.color = 'blue', edge.width=sqrt(E(role_graph)$weight),
+            edge.curved = T, edge.arrow.size = 1,
+            edge.label.x = c(1.40,0.85),
+            edge.label.y = -0.16,
+            edge.label = E(role_graph)$weight, edge.label.cex = 1.5,
+            layout = lay,
+            main = 'Number of Role Changes - Seed disperser')
+
+
+#Change of structural role of plant species the in pollination layer--
+
+# list of plants that appear in more than one treatment
+n_pp <- super_list_treat %>% 
+  filter(type =="Plant", layer_id == 1) %>% 
+  filter(duplicated(node_id)) %>% 
+  select(node_id)
+
+# count role changes
+distances <- c()
+longest_steps <- c()
+change_count <- c()
+switched <- c()
+role_changes <- matrix(0L, nrow = 4, ncol = 4, 
+                       dimnames = list(c('P', 'C', 'MH', 'NH'), c('P', 'C', 'MH', 'NH')))
+
+super_list_pp<- super_list_treat %>% 
+  filter(type =="Plant", layer_id == 1) %>% 
+  filter(node_id%in%n_pp$node_id) #we identify and select the plant species
+
+
+for (i in unique(super_list_pp$node_id)) {
+  physical_i <- filter(super_list_pp, node_id == i) 
+  if (length(physical_i$Treat) > 1) {
+    i_steps <-c()
+    d_total_i <- 0
+    i_change_count <- 0
+    for (l in 1:(length(physical_i$Treat)-1)) {
+      role_change <- c() #avoid double counts
+      #  
+      d <- euclidean_distance(physical_i[l:(l+1),]$c_score, physical_i[l:(l+1),]$z_score)
+      i_steps[l] <- d
+      d_total_i <- d_total_i + d
+      l_role <- physical_i$role[l]
+      next_role <- physical_i$role[l+1]
+      if (next_role != l_role) {i_change_count <- i_change_count + 1}
+      # also count cases when the role stayed the same
+      role_change <- case_when(l_role == 'peripheral' & next_role == 'connector' ~ c(1,2),
+                               l_role == 'peripheral' & next_role == 'module hub' ~ c(1,3),
+                               l_role == 'peripheral' & next_role == 'network hub' ~ c(1,4),
+                               l_role == 'connector' & next_role == 'peripheral' ~ c(2,1),
+                               l_role == 'connector' & next_role == 'module hub' ~ c(2,3),
+                               l_role == 'connector' & next_role == 'network hub' ~ c(2,4),
+                               l_role == 'module hub' & next_role == 'peripheral' ~ c(3,1),
+                               l_role == 'module hub' & next_role == 'connector' ~ c(3,2),
+                               l_role == 'module hub' & next_role == 'network hub' ~ c(3,4),
+                               l_role == 'network hub' & next_role == 'peripheral' ~ c(4,1),
+                               l_role == 'network hub' & next_role == 'connector' ~ c(4,2),
+                               l_role == 'network hub' & next_role == 'module hub' ~ c(4,3),
+                               l_role == 'peripheral' & next_role == 'peripheral' ~ c(1,1),
+                               l_role == 'connector' & next_role == 'connector' ~ c(2,2),
+                               l_role == 'module hub' & next_role == 'module hub' ~ c(3,3),
+                               l_role == 'network hub' & next_role == 'network hub' ~ c(4,4))
+      role_changes[role_change[1], role_change[2]] <- role_changes[role_change[1], role_change[2]] + 1
+      
+    }      
+    distances[i] <- d_total_i / length(physical_i$Treat) #divide by number of layers the node is in
+    longest_steps[i] <- max(i_steps)
+    change_count[i] <- i_change_count / length(physical_i$Treat) #divide number of changes by number of layers
+    switched[i] <- case_when(i_change_count > 0 ~ T, i_change_count == 0 ~ F)
+  }
+}
+
+node_stats <- as.data.frame(cbind(n_pp$node_id, distances, change_count, longest_steps, switched)) 
+names(node_stats) <- c('node_id', 'total_distance', 'change_count', 'longest_steps', 'switched')
+node_stats <- node_stats [-nrow(node_stats),]
+node_stats$switched <- as.logical(node_stats$switched) 
+count_role_changes_pp<- list()
+count_role_changes_pp$matrix <- role_changes
+count_role_changes_pp$node_stats <- node_stats
+rm(node_stats, role_changes, physical_i)
+
+p_switched <- sum(switched, na.rm = TRUE) / length(n_pp$node_id)#Proportion of plant species that 
+#changed their role in pollination layers
+
+#Plot-
+role_graph <- graph_from_adjacency_matrix(count_role_changes_pp$matrix ,weighted = T, diag = T)
+lay <- layout_in_circle(role_graph)
+par(mar=c(6, 4, 4, 2))
+plot.igraph(role_graph, vertex.size = 50, vertex.color = 'grey87', 
+            vertex.label.color = 'black', vertex.shape = 'circle', 
+            edge.color = 'forestgreen', edge.width=sqrt(E(role_graph)$weight),
+            edge.curved = T, edge.arrow.size = 1,
+            edge.label.x = c(1.43,0.59,0.63,-0.10,-0.48, -0.56),
+            edge.label.y = -0.15,
+            edge.label = E(role_graph)$weight, edge.label.cex = 1.5,
+            layout = lay,
+            main = 'Number of Role Changes - Plant pollination layer')
+
+
+#Change of structural role of plant species in pthe seed dispersal layer--
+
+# list of seed dispersers that appear in more than one treatment
+n_pd <- super_list_treat %>% 
+  filter(type =="Plant", layer_id == 2) %>% 
+  filter(duplicated(node_id)) %>% 
+  select(node_id)
+
+# count role changes
+distances <- c()
+longest_steps <- c()
+change_count <- c()
+switched <- c()
+role_changes <- matrix(0L, nrow = 4, ncol = 4, 
+                       dimnames = list(c('P', 'C', 'MH', 'NH'), c('P', 'C', 'MH', 'NH')))
+
+super_list_pd<- super_list_treat %>% 
+  filter(type =="Plant", layer_id == 2) %>%
+  filter(node_id%in%n_pd$node_id) #we identify and select the seed disperser species
+
+
+for (i in unique(super_list_pd$node_id)) {
+  physical_i <- filter(super_list_pd, node_id == i) 
+  if (length(physical_i$Treat) > 1) {
+    i_steps <-c()
+    d_total_i <- 0
+    i_change_count <- 0
+    for (l in 1:(length(physical_i$Treat)-1)) {
+      role_change <- c() #avoid double counts
+      #  
+      d <- euclidean_distance(physical_i[l:(l+1),]$c_score, physical_i[l:(l+1),]$z_score)
+      i_steps[l] <- d
+      d_total_i <- d_total_i + d
+      l_role <- physical_i$role[l]
+      next_role <- physical_i$role[l+1]
+      if (next_role != l_role) {i_change_count <- i_change_count + 1}
+      # also count cases when the role stayed the same
+      role_change <- case_when(l_role == 'peripheral' & next_role == 'connector' ~ c(1,2),
+                               l_role == 'peripheral' & next_role == 'module hub' ~ c(1,3),
+                               l_role == 'peripheral' & next_role == 'network hub' ~ c(1,4),
+                               l_role == 'connector' & next_role == 'peripheral' ~ c(2,1),
+                               l_role == 'connector' & next_role == 'module hub' ~ c(2,3),
+                               l_role == 'connector' & next_role == 'network hub' ~ c(2,4),
+                               l_role == 'module hub' & next_role == 'peripheral' ~ c(3,1),
+                               l_role == 'module hub' & next_role == 'connector' ~ c(3,2),
+                               l_role == 'module hub' & next_role == 'network hub' ~ c(3,4),
+                               l_role == 'network hub' & next_role == 'peripheral' ~ c(4,1),
+                               l_role == 'network hub' & next_role == 'connector' ~ c(4,2),
+                               l_role == 'network hub' & next_role == 'module hub' ~ c(4,3),
+                               l_role == 'peripheral' & next_role == 'peripheral' ~ c(1,1),
+                               l_role == 'connector' & next_role == 'connector' ~ c(2,2),
+                               l_role == 'module hub' & next_role == 'module hub' ~ c(3,3),
+                               l_role == 'network hub' & next_role == 'network hub' ~ c(4,4))
+      role_changes[role_change[1], role_change[2]] <- role_changes[role_change[1], role_change[2]] + 1
+      
+    }      
+    distances[i] <- d_total_i / length(physical_i$Treat) #divide by number of layers the node is in
+    longest_steps[i] <- max(i_steps)
+    change_count[i] <- i_change_count / length(physical_i$Treat) #divide number of changes by number of layers
+    switched[i] <- case_when(i_change_count > 0 ~ T, i_change_count == 0 ~ F)
+  }
+}
+
+node_stats <- as.data.frame(cbind(n_pd$node_id, distances, change_count, longest_steps, switched)) 
+names(node_stats) <- c('node_id', 'total_distance', 'change_count', 'longest_steps', 'switched')
+node_stats <- node_stats [-nrow(node_stats),]
+node_stats$switched <- as.logical(node_stats$switched) 
+count_role_changes_pd<- list()
+count_role_changes_pd$matrix <- role_changes
+count_role_changes_pd$node_stats <- node_stats
+rm(node_stats, role_changes, physical_i)
+
+p_switched <- sum(count_role_changes_pd$node_stats$switched, na.rm = TRUE) / length(n_pd$node_id)#Proportion of plant species that 
+#changed their role in seed disperser layers
+
+#Plot-
+role_graph <- graph_from_adjacency_matrix(count_role_changes_pd$matrix ,weighted = T, diag = T)
+lay <- layout_in_circle(role_graph)
+par(mar=c(6, 4, 4, 2))
+plot.igraph(role_graph, vertex.size = 50, vertex.color = 'grey87', 
+            vertex.label.color = 'black', vertex.shape = 'circle', 
+            edge.color = 'forestgreen', edge.width=sqrt(E(role_graph)$weight),
+            edge.curved = T, edge.arrow.size = 1,
+            edge.label.x = c(1.40,0.43,-0.55,0.80,0.49, 0.36),
+            edge.label.y = -0.16,
+            edge.label = E(role_graph)$weight, edge.label.cex = 1.5,
+            layout = lay,
+            main = 'Number of Role Changes - Plant seed disperser layer')
+
+
