@@ -1,8 +1,10 @@
-#### Extra functions ac? est? MIC y se crean los archivos ordenados (edges, layers and layout para la modularidad)
+#This file contain
 
-##################CONNECTIVITY INDEX########################
-#this function calculates the number of path per plant species connecting layers and the number of
-#pollinators and seed dispersers interacting with the plant 
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#                      1. CONNECTIVITY INDEX                            
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#this function calculates the number of path per plant species connecting layers and the number of pollinators and seed dispersers 
+#interacting with the plant 
 
 Connectivityindex=function(wp,edges.list)
 {
@@ -27,7 +29,10 @@ Connectivityindex=function(wp,edges.list)
 }
 
 
-##########TO PROP FUNCTION! ##############################
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  #                      2. TO PROPORTION FUNCTION                      
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#this function change the weight of links between species in the network to proportions
 
 ToProp=function(IntNetwork) 
 {
@@ -37,11 +42,12 @@ ToProp=function(IntNetwork)
 }  
 
 
-# networkwD=IntNetPol
-# networkP=simudisp17[,,i]
 
-########## CREATEFILES FUNCTION! ##############################
-
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  #                      3. CREATE FILES FUNCTION                      
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#this function create an edge list containing intralayer and interlayer interaction between species
+  
 CreateFiles=function(networkD,networkP)
 
 { 
@@ -58,12 +64,11 @@ CreateFiles=function(networkD,networkP)
   n.dispersores=length(Dispersores)
   n.nodos=n.plantas+n.polinizadores+n.dispersores
   
-  # Edges lists PolPLanta
+  #Create edges list of plant-pollinator layer --
   
   nodeFrom=c()
   nodeTo=c()
   weight=c()
-  
   
   for (i in 1:n.plantas)#para cada palnta for 1 a n, fijate los pesos que son positivos #y guardate quienes son esos polinizadores "quienes"
   {
@@ -84,12 +89,11 @@ CreateFiles=function(networkD,networkP)
   
   Edges.List1=as.data.frame(cbind(nodeFrom,nodeTo,weight))
   
-  # edge list DispPlanta
+#Create edge list of plant-seed disperser layer --
   
   nodeFrom=c()
   nodeTo=c()
   weight=c()
-  
   
   for (i in 1:n.plantas)
   {
@@ -128,9 +132,9 @@ CreateFiles=function(networkD,networkP)
                      'weight'=Edges.List2[,3])
   
  
-  # Conexion intercapa (Prop path = Npath/Total path)
+  #Create weigthed interlayer edges (Prop path = Npath/Total path) --
   
-  #seleccionamos aquellas plantas que presente enlaces en ambas capas
+  #select the plant present in both layers 
   Qplan1=which(vapply(networkD,sum,1)>0)
   Qplan2=which(vapply(networkP,sum,1)>0)
   
@@ -148,11 +152,11 @@ CreateFiles=function(networkD,networkP)
     D[j]=as.numeric(Extend2 %>% filter(node_from ==nodeP)  %>% summarise(n = n())) #calculamos el num de disp que interactua con cada planta que conecta ambas capas
   } 
   
-  W = P*D #Numero de path per plant species connecting both layers
+  W = P*D #Calculate the number of path per plant species connecting both layers
   
   cuan.inter=length(quienes.inter)# create the vector containing the Num path/Total path
   for (i in seq_along(W)){
-    cuan.inter[i] = W[i]/ (n.polinizadores*n.dispersores)
+    cuan.inter[i] = W[i]/ (n.polinizadores*n.dispersores) 
   }
   
   #creamos el archivo de interacciones inter
@@ -182,12 +186,11 @@ CreateFiles=function(networkD,networkP)
 
 }
 
-
-########### SHUFFLING 
-
-###Shuffle 
-
-#Using r2dtable algorithm> maitaininmg the col and row sums (degree) but shuffle the interactions
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  #                      4. SHUFFLING FUNCTION                      
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#This function shuffle the interactions of the empirical network to create 1000 random networks according to the "r2dtable" algorithm (see main manuscript for more details). 
+#For each generated network, we calculated the number of modules and L value.
 
 Shuffle <- function(Npol,Ndisp)
   
@@ -195,9 +198,8 @@ Shuffle <- function(Npol,Ndisp)
   require(infomapecology)
   
   nsim=1000
-  #nullmodel function creates an object, which can serve as a basis for Null Model simulation 
   
-  nmpol <- vegan::nullmodel(Npol, method = "r2dtable") #create the matrices to calculate the parameters
+  nmpol <- vegan::nullmodel(Npol, method = "r2dtable") #create the objects to calculate the parameters
   nmdisp <- vegan::nullmodel(Ndisp, method = "r2dtable")
   
   set.seed(11)
@@ -206,19 +208,18 @@ Shuffle <- function(Npol,Ndisp)
   simupol <- simulate(nmpol, nsim=nsim+100) 
   simudisp <- simulate(nmdisp, nsim=nsim+100)
   
-  #Create vectors to sotre the output of each simulation
+  #Create vectors to store the output of each simulation
   L=numeric(nsim)
   M=numeric(nsim)
   x_modules = list()
-  NN=1 #es un indice
+  NN=1 
   
-  #lo que hace es pasar a data frame las simulaciones que est?n en los vectores de 3 dimensiones (simupol, simudisp)
-  for (i in 1:(nsim+100)) #para cada matriz simulada
+  for (i in 1:(nsim+100)) 
   {
-    if (NN<=nsim) #if the number of outputs is smaller than N sim (1000) continue calculating modularity
+    if (NN<=nsim) #if the number of outputs is smaller than 1000, continue calculating modularity
     {
-      IntNetPol=simupol[,,i] #,, (todos los elementos) se va quedando con la i esima matriz simulada del archivo simulpol(primero 1, despues 2,3,4..hasta nsim*2 )
-      IntNetDisp=simudisp[,,i] #idem para las simulaciones de las capas de disp
+      IntNetPol=simupol[,,i] 
+      IntNetDisp=simudisp[,,i] 
       
       IntNetPol=as.data.frame(IntNetPol)
       IntNetPol=filter_all(IntNetPol, any_vars(. != 0)) #check of row with 0 
@@ -226,33 +227,31 @@ Shuffle <- function(Npol,Ndisp)
       IntNetDisp=as.data.frame(IntNetDisp)
       IntNetDisp=filter_all(IntNetDisp, any_vars(. != 0))  
       
-      #To prop
+      #Call function to change the network' edges to proportions
       PNetPol=ToProp(IntNetPol)
       PNetDisp=ToProp(IntNetDisp)
       
-      #Modularity (first create the edge list with the function)
-      
+      #Call function to create the network edge list
       files=CreateFiles(PNetDisp,PNetPol)
       Edges=files$Edges.info
       Nodes=files$Nodes.info
       Layers=files$Layers.info
       
-      Nodes<-cbind(Nodes, Type = rep(c("Plant","Pol","Disp"),times =c(ncol(IntNetPol), nrow(IntNetPol),nrow(IntNetDisp)))) #we added the type of species
+      Nodes<-cbind(Nodes, Type = rep(c("Plant","Pol","Disp"),times =c(ncol(IntNetPol), nrow(IntNetPol),nrow(IntNetDisp)))) #we added the trophic group of species to the dataframe
       
-      #Create infomap object
+      #Calculate number of modules and L
       Network= create_multilayer_object(extended = Edges,nodes=Nodes,
-                                        intra_output_extended = TRUE,layers=Layers)
+                                        intra_output_extended = TRUE,layers=Layers) #create a multilayer object using the edge list generated before
       
       salida=run_infomap_multilayer(Network, relax = F, silent = T, trials = 100, 
-                                    temporal_network = F,flow_model='undirected')
+                                    temporal_network = F,flow_model='undirected') #output containing list of modules with the species integrating each module and L
       
-      #esto no lo eniendo, para cada valor de m (que no sea na) y L de las simulaciones guardar el archivo NN?
-      if (!is.na(salida$m)) # la ! significa el opuesto del comando, es decir seleccionar todos los valores que no son NA
+     
+      if (!is.na(salida$m)) #Save the value of number of modules and L when the number of modules is not Na
       {
         L[NN]=salida$L 
         M[NN]=salida$m
         x_modules = salida$modules
-        #NN es el facuking indice que va contando la cant de simulacion cuya modularidad es diferente de NA
         NN=NN+1
       }
       
@@ -265,242 +264,6 @@ Shuffle <- function(Npol,Ndisp)
            Role = data.frame (x_modules)))     
   }
 
-
-## Shuffle individual interactions within each layers
-
-#Using the 'r00_both' algorithm: maintains the number of links, while redistributing the 
-# individual interactions independently. Therefore, it conserves the number of pollinators (or seed disperser species) that visit plants.
-
-
-Shuf_intraedges <- function(Npol,Ndisp)
-  
-{ require(tidyverse)
-  require(infomapecology)
-  
-nsim=1000
-#nullmodel function creates an object, which can serve as a basis for Null Model simulation 
-
-nmpol <- vegan::nullmodel(Npol, method = "r00_both") #create the matrices to calculate the parameters
-nmdisp <- vegan::nullmodel(Ndisp, method = "r00_both")
-
-set.seed(11)
-
-#Simulation
-simupol <- simulate(nmpol, nsim=nsim+100) 
-simudisp <- simulate(nmdisp, nsim=nsim+100)
-
-#Create vectors to sotre the output of each simulation
-L=numeric(nsim)
-M=numeric(nsim)
-NN=1 #es un indice
-
-#lo que hace es pasar a data frame las simulaciones que est?n en los vectores de 3 dimensiones (simupol, simudisp)
-for (i in 1:(nsim+100)) #para cada matriz simulada
-{
-  if (NN<=nsim) #if the number of outputs is smaller than N sim (1000) continue calculating modularity
-  {
-    IntNetPol=simupol[,,i] #,, (todos los elementos) se va quedando con la i esima matriz simulada del archivo simulpol(primero 1, despues 2,3,4..hasta nsim*2 )
-    IntNetDisp=simudisp[,,i] #idem para las simulaciones de las capas de disp
-    
-    IntNetPol=as.data.frame(IntNetPol)
-    IntNetPol=filter_all(IntNetPol, any_vars(. != 0)) #check of row with 0 
-    
-    IntNetDisp=as.data.frame(IntNetDisp)
-    IntNetDisp=filter_all(IntNetDisp, any_vars(. != 0))  
-    
-    #To prop
-    PNetPol=ToProp(IntNetPol)
-    PNetDisp=ToProp(IntNetDisp)
-    
-    #Modularity (first create the edge list with the function)
-    
-    files=CreateFiles(PNetDisp,PNetPol)
-    Edges=files$Edges.info
-    Nodes=files$Nodes.info
-    Layers=files$Layers.info
-    
-    #Create infomap object
-    Network= create_multilayer_object(extended = Edges,nodes=Nodes,
-                                      intra_output_extended = TRUE,layers=Layers)
-    
-    salida=run_infomap_multilayer(Network, relax = F, silent = T, trials = 100, 
-                                  temporal_network = F,flow_model='undirected')
-    
-    #esto no lo eniendo, para cada valor de m (que no sea na) y L de las simulaciones guardar el archivo NN?
-    if (!is.na(salida$m)) # la ! significa el opuesto del comando, es decir seleccionar todos los valores que no son NA
-    {
-      L[NN]=salida$L 
-      M[NN]=salida$m
-      #NN es el facuking indice que va contando la cant de simulacion cuya modularidad es diferente de NA
-      NN=NN+1
-    }
-    
-  }
-  
-  else
-  {break} 
-}
-return(Sim_Results=data.frame("M"=as.integer(M),"L"=L))
-}
-
-
-## Shuffle labels  within each layers (nodal null model)
-#inter-layer null model 1' with the ‘r00_samp' algorithm that changes the order of the ‘labels' of the species in each matrix
-
-Shuf_interedges <- function(Npol,Ndisp)
-  
-{ require(tidyverse)
-  require(infomapecology)
-  
-  nsim=1000
-  #nullmodel function creates an object, which can serve as a basis for Null Model simulation 
-  
-  nmpol <- vegan::nullmodel(Npol, method = "r00_samp") #create the matrices to calculate the parameters
-  nmdisp <- vegan::nullmodel(Ndisp, method = "r00_samp")
-  
-  set.seed(11)
-  
-  #Simulation
-  simupol <- simulate(nmpol, nsim=nsim+100) 
-  simudisp <- simulate(nmdisp, nsim=nsim+100)
-  
-  #Create vectors to sotre the output of each simulation
-  L=numeric(nsim)
-  M=numeric(nsim)
-  NN=1 #es un indice
-  
-  #lo que hace es pasar a data frame las simulaciones que est?n en los vectores de 3 dimensiones (simupol, simudisp)
-  for (i in 1:(nsim+100)) #para cada matriz simulada
-  {
-    if (NN<=nsim) #if the number of outputs is smaller than N sim (1000) continue calculating modularity
-    {
-      IntNetPol=simupol[,,i] #,, (todos los elementos) se va quedando con la i esima matriz simulada del archivo simulpol(primero 1, despues 2,3,4..hasta nsim*2 )
-      IntNetDisp=simudisp[,,i] #idem para las simulaciones de las capas de disp
-      
-      IntNetPol=as.data.frame(IntNetPol)
-      IntNetPol=filter_all(IntNetPol, any_vars(. != 0)) #check of row with 0 
-      
-      IntNetDisp=as.data.frame(IntNetDisp)
-      IntNetDisp=filter_all(IntNetDisp, any_vars(. != 0))  
-      
-      #To prop
-      PNetPol=ToProp(IntNetPol)
-      PNetDisp=ToProp(IntNetDisp)
-      
-      #Modularity (first create the edge list with the function)
-      
-      files=CreateFiles(PNetDisp,PNetPol)
-      Edges=files$Edges.info
-      Nodes=files$Nodes.info
-      Layers=files$Layers.info
-      
-      #Create infomap object
-      Network= create_multilayer_object(extended = Edges,nodes=Nodes,
-                                        intra_output_extended = TRUE,layers=Layers)
-      
-      salida=run_infomap_multilayer(Network, relax = F, silent = T, trials = 100, 
-                                    temporal_network = F,flow_model='undirected')
-      
-      #esto no lo eniendo, para cada valor de m (que no sea na) y L de las simulaciones guardar el archivo NN?
-      if (!is.na(salida$m)) # la ! significa el opuesto del comando, es decir seleccionar todos los valores que no son NA
-      {
-        L[NN]=salida$L 
-        M[NN]=salida$m
-        #NN es el facuking indice que va contando la cant de simulacion cuya modularidad es diferente de NA
-        NN=NN+1
-      }
-      
-    }
-    
-    else
-    {break} 
-  }
-  return(Sim_Results=data.frame("M"=as.integer(M),"L"=L))
-}
-
-## Shuffle labels individual interactions and labels within each layers (inter layer null model 2). 
-#It's a combination of both null models where change the interaction between species and the labels.
-#we first conserve the total number of interactions and cell of the matrix, while shuffle the individual interactions (R00_both).
-#Second, we change the labels of each matrix (R00_samp)
-
-
-Shuf_inter_intra <- function(Npol,Ndisp)
-  
-{  require(tidyverse)
-  require(infomapecology)
-  
-  nsim=1000
-  #nullmodel function creates an object, which can serve as a basis for Null Model simulation 
-  
-  nmpol <- vegan::nullmodel(Npol, method = "r00_both") #create the matrices to calculate the parameters
-  nmdisp <- vegan::nullmodel(Ndisp, method = "r00_both")
-  
-  set.seed(11)
-  
-  #Simulation
-  simupol <- simulate(nmpol, nsim=nsim+100) 
-  simudisp <- simulate(nmdisp, nsim=nsim+100)
-  
-  #Create vectors to sotre the output of each simulation
-  L=numeric(nsim)
-  M=numeric(nsim)
-  NN=1 #es un indice
-  
-  #lo que hace es pasar a data frame las simulaciones que est?n en los vectores de 3 dimensiones (simupol, simudisp)
-  for (i in 1:(nsim+100)) #para cada matriz simulada
-  {
-    if (NN<=nsim) #if the number of outputs is smaller than N sim (1000) continue calculating modularity
-    {
-      IntNetPol=simupol[,,i] #,, (todos los elementos) se va quedando con la i esima matriz simulada del archivo simulpol(primero 1, despues 2,3,4..hasta nsim*2 )
-      IntNetDisp=simudisp[,,i] #idem para las simulaciones de las capas de disp
-      
-      IntNetPol=as.data.frame(IntNetPol)
-      IntNetPol=filter_all(IntNetPol, any_vars(. != 0)) #check of row with 0 
-      
-      IntNetDisp=as.data.frame(IntNetDisp)
-      IntNetDisp=filter_all(IntNetDisp, any_vars(. != 0))  
-      
-      rownames(IntNetPol)<-sample(rownames(IntNetPol)) #shufle the labels of rows
-      colnames(IntNetPol)<-sample(colnames(IntNetPol)) #shufle the labels of columns
-      
-      rownames(IntNetDisp)<-sample(rownames(IntNetDisp)) #shufle the labels of rows
-      colnames(IntNetDisp)<-sample(colnames(IntNetDisp)) #shufle the labels of columns
-      
-  
-      #To prop
-      PNetPol=ToProp(IntNetPol)
-      PNetDisp=ToProp(IntNetDisp)
-  
-      #Modularity (first create the edge list with the function)
-      
-      files=CreateFiles(PNetDisp,PNetPol)
-      Edges=files$Edges.info
-      Nodes=files$Nodes.info
-      Layers=files$Layers.info
-      
-      #Create infomap object
-      Network= create_multilayer_object(extended = Edges,nodes=Nodes,
-                                        intra_output_extended = TRUE,layers=Layers)
-      
-      salida=run_infomap_multilayer(Network, relax = F, silent = T, trials = 100, 
-                                    temporal_network = F,flow_model='undirected')
-      
-      #esto no lo eniendo, para cada valor de m (que no sea na) y L de las simulaciones guardar el archivo NN?
-      if (!is.na(salida$m)) # la ! significa el opuesto del comando, es decir seleccionar todos los valores que no son NA
-      {
-        L[NN]=salida$L 
-        M[NN]=salida$m
-        #NN es el facuking indice que va contando la cant de simulacion cuya modularidad es diferente de NA
-        NN=NN+1
-      }
-      
-    }
-    
-    else
-    {break} 
-  }
-  return(Sim_Results=data.frame("M"=as.integer(M),"L"=L))
-}
 
 
 ############################# AUC FUNCTION ###################################
