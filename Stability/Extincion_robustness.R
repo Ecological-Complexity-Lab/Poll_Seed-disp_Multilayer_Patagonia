@@ -145,7 +145,7 @@ for (j in 1:3)
       if(scenario[j]=='LtoM')
       {
         n.rolesNA[deads]=9999 #replace the classification of the dead species for "9999", so the , so the algorithm doesn't chose dead species to remove.
-        ind.min = which(n.rolesNA==min(n.rolesNA))##select an alive species with the minimum classification to remove
+        ind.min = which(n.rolesNA==min(n.rolesNA))#select an alive species with the minimum classification to remove
         next.rem=ind.min[sample(length(ind.min),size=1)]
       }
      #identify the trophic group of the species to remove according to the node ID
@@ -167,7 +167,7 @@ for (j in 1:3)
       
       NC=netcascade_multi(as.matrix(IM),rplants_disp,rplants_pol, rpol, rdisp,deadPlants=deadPlants, deadPols=deadPols, deadDisps=deadDisps, targetGuild=tg ,target=next.rem.fc,return.matrix=T)
       
-      deadPlants=c(deadPlants,NC$lost_plants)#deadPlants represens the accumulated dead plants, while lost plants refers to the plant species lost in the current step
+      deadPlants=c(deadPlants,NC$lost_plants)#deadPlants represent the accumulated dead plants, while lost plants refers to the plant species lost in the current step
       deadPols=c(deadPols,NC$lost_pols)#same for pollinators
       deadDisps=c(deadDisps,NC$lost_disps)#same for seed dispersers
       
