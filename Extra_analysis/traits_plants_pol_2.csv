@@ -1,0 +1,47 @@
+Plant_name,"Propagation (e.g. Vegetative,  seed and vegetative,   seed)","self - compatible (yes, no)","Mode of pollination (e.g. Wind, animals)",R
+Aca_ova,seed and vegetative,yes ,wind,0.1
+Ade_chi,seed and vegetative,yes ,animals,0.5
+Als_aur,seed and vegetative,yes ,animals,0.5
+Ari_chi,seed and vegetative,no,animals,0.6
+Aza_mic,seed,yes ,animals,0.9
+Bac_sal,seed and vegetative,no,animals,0.6
+Ber_dar,seed and vegetative,no,animals,0.6
+Ber_mic,seed and vegetative,no,animals,0.6
+Cir_vul,seed,yes ,animals,0.9
+Cod_les,seed and vegetative,no,animals,0.6
+Col_hys,seed,no,animals,1
+Con_aja,seed,yes ,animals,0.9
+Cyn_die,seed,yes ,animals,0.9
+Cyt_sco,seed,no,animals,1
+Das_dia,seed and vegetative,yes ,animals,0.5
+Emb_coc,seed and vegetative,no,animals,0.6
+Fuc_mag,seed and vegetative,yes ,animals,0.5
+Gal_hyp,seed,yes ,animals,0.9
+Gau_muc,seed and vegetative,no,animals,0.6
+Gav_odo,seed and vegetative,no,animals,0.6
+Ger_mag,seed,no,animals,1
+Lab_ana,seed and vegetative,yes ,animals,0.5
+Lum_api,seed and vegetative,no,animals,0.6
+May_boa,seed,no,animals,1
+May_chu,seed,no,animals,1
+Mut_dec,seed and vegetative,yes ,animals,0.5
+Mut_spi,seed and vegetative,yes ,animals,0.5
+Osm_chi,seed,yes ,unknown,0.8
+Pha_sec,seed,yes ,animals,0.9
+Pla_lan,seed and vegetative,no,wind,0.1
+Pru_avi,seed and vegetative,no,animals,0.6
+Pru_vul,seed and vegetative,yes ,animals,0.5
+Rib_mag,seed and vegetative,unknown,animals,0.5
+Ros_rub,seed and vegetative,yes ,animals,0.5
+Rub_ida,seed and vegetative,yes ,animals,0.5
+Sch_pat,seed,no,animals,1
+Sol_nit,seed and vegetative,yes ,animals,0.5
+sp_1,seed and vegetative,unknown,animals,0.5
+sp_2,seed and vegetative,unknown,animals,0.5
+sp_3,seed and vegetative,unknown,animals,0.5
+Tar_offi,seed ,yes ,animals,0.9
+Tri_cor,seed,yes ,animals,0.9
+Tri_pra,seed and vegetative ,no,animals,0.6
+Val_sp,seed and vegetative ,unknown,animals,0.5
+Vic_nig,seed,yes ,animals,0.9
+Vio_mac,seed and vegetative ,yes ,animals,0.5

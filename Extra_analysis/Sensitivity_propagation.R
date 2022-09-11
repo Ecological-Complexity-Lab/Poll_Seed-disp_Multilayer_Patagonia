@@ -424,7 +424,7 @@ res_I = res3
 
 Prop_sens<- rbind(res_NI,res_I)
 
-#Plot--
+#Plot (Appendix S3)--
 library(ggplot2)
 
 Prop_sens$Treat<-factor(Prop_sens$Treat, levels=c("NI","I"))

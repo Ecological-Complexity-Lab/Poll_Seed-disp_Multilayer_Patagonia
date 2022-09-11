@@ -1,10 +1,10 @@
-#This file contains the code to explore how sensitive is the propagation to changes in the values of dependence on 
+#This file contains the code to explore how sensitive is the robustness to changes in the values of dependence on 
 #the mutualisms (R) assigned to species.
 
-########### 1.  Estimation of the propagation for each treatment after reduced and increased the values of R of each species
+########### 1.  Estimation of the robustness for each treatment after reduced and increased the values of R of each species
 
 #-----------------------------------------------------------------------------------------------------------------
-###### 1. Estimation of the propagation for each treatment --
+###### 1. Estimation of the robustness for each treatment --
 
 library(tidyverse)
 library(dplyr)
@@ -453,7 +453,7 @@ Rob_sens2$Treat<-factor(Rob_sens2$Treat, levels=c("NI","I"))
 Rob_sens2$Scenario <- factor(Rob_sens2$Scenario , levels=c("random","MtoL","LtoM"))
 
 
-#Plot- 
+#Plot (Appendix S3)- 
 ggplot(Rob_sens2) + geom_point(aes(R,Auc_mean, color = Scenario))+ 
   geom_line(aes(R,Auc_mean, color = Scenario))+
   geom_ribbon(aes(x= R, y = Auc_mean, ymin = Auc_mean - Auc_sd, ymax = Auc_mean + Auc_sd, fill = Scenario), alpha = 0.2)+

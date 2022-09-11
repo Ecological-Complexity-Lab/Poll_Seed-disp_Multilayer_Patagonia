@@ -1,0 +1,47 @@
+Plant_name,"Propagation (e.g. Vegetative,  seed and vegetative,   seed)","Fleshy-fruited species (yes, no)",R
+Aca_ova,seed and vegetative,no,0
+Ade_chi,seed and vegetative,no,0
+Als_aur,seed and vegetative,no,0
+Ari_chi,seed and vegetative,yes,0.5
+Aza_mic,seed,yes,0.9
+Bac_sal,seed and vegetative,no,0
+Ber_dar,seed and vegetative,yes,0.5
+Ber_mic,seed and vegetative,yes,0.5
+Cir_vul,seed,no,0
+Cod_les,seed and vegetative,no,0
+Col_hys,seed,yes,0.9
+Con_aja,seed,no,0
+Cyn_die,seed,no,0
+Cyt_sco,seed,no,0
+Das_dia,seed and vegetative,no,0
+Emb_coc,seed and vegetative,no,0
+Fuc_mag,seed and vegetative,yes,0.5
+Gal_hyp,seed,yes,0.9
+Gau_muc,seed and vegetative,yes,0.5
+Gav_odo,seed and vegetative,no,0
+Ger_mag,seed,no,0
+Lab_ana,seed and vegetative,no,0
+Lum_api,seed and vegetative,yes,0.5
+May_boa,seed,yes,0.9
+May_chu,seed,yes,0.9
+Mut_dec,seed and vegetative,no,0
+Mut_spi,seed and vegetative,no,0
+Osm_chi,seed,no,0
+Pha_sec,seed,no,0
+Pla_lan,seed and vegetative,No,0
+Pru_avi,seed and vegetative,yes,0.5
+Pru_vul,seed and vegetative,no,0
+Rib_mag,seed and vegetative,yes,0.5
+Ros_rub,seed and vegetative,yes,0.5
+Rub_ida,seed and vegetative,yes,0.5
+Sch_pat,seed,yes,0.9
+Sol_nit,seed and vegetative,yes,0.5
+sp_1,-,no,0
+sp_2,-,no,0
+sp_3,-,no,0
+Tar_offi,seed ,no,0
+Tri_cor,seed,yes,0.9
+Tri_pra,seed and vegetative ,no,0
+Val_sp,seed and vegetative ,no,0
+Vic_nig,seed,no,0
+Vio_mac,seed and vegetative ,no,0
