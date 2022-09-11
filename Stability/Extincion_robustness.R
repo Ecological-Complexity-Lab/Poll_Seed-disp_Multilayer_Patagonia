@@ -1,3 +1,5 @@
+#This file has the codes to estimate the robustness of each network  and compare it between treatments
+
 ########### 1. Estimation of the robustness for each treatment
 
 ########### 2. Comparison between treatments
@@ -24,6 +26,7 @@ Rplant_pol_NI <- read.csv("/Users/agustin/Documents/GitHub/Multilayer_Ecology-le
 Rplant_pol_I <- read.csv("/Users/agustin/Documents/GitHub/Multilayer_Ecology-letters/Data/Rplant_pol_I.csv")
 Rplant_disp_NI <- read.csv("/Users/agustin/Documents/GitHub/Multilayer_Ecology-letters/Data/Rplant_disp_NI.csv")
 Rplant_disp_I <- read.csv("/Users/agustin/Documents/GitHub/Multilayer_Ecology-letters/Data/Rplant_disp_I.csv")
+
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                      NI TREATMENT                            
