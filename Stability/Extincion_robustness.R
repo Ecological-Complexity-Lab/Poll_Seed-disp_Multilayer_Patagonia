@@ -77,11 +77,10 @@ n.roles <- roles %>%
                                  role == "peripheral"~ 1)) 
 n.roles <- n.roles$role
 
-nsims=1000
-
 ####################
 ####  Scenarios ####
 ####################
+nsims=1000
 
 # a) Random Species 
 # b) Most to least 
