@@ -19,10 +19,10 @@ Rdisp_NI <- read.csv("/Users/agustin/Documents/GitHub/Multilayer_Ecology-letters
 Rdisp_I <- read.csv("/Users/agustin/Documents/GitHub/Multilayer_Ecology-letters/Data/Rdisp_I.csv")
 Rpol_NI <- read.csv("/Users/agustin/Documents/GitHub/Multilayer_Ecology-letters/Data/Rpol_NI.csv")
 Rpol_I <- read.csv("/Users/agustin/Documents/GitHub/Multilayer_Ecology-letters/Data/Rpol_I.csv")
-Rplant_pol_NI <- read.csv("/Users/agustin/Documents/GitHub/Multilayer_Ecology-letters/Data/Rplant_pol_NI_2.csv")
-Rplant_pol_I <- read.csv("/Users/agustin/Documents/GitHub/Multilayer_Ecology-letters/Data/Rplant_pol_I_2.csv")
-Rplant_disp_NI <- read.csv("/Users/agustin/Documents/GitHub/Multilayer_Ecology-letters/Data/Rplant_disp_NI_2.csv")
-Rplant_disp_I <- read.csv("/Users/agustin/Documents/GitHub/Multilayer_Ecology-letters/Data/Rplant_disp_I_2.csv")
+Rplant_pol_NI <- read.csv("/Users/agustin/Documents/GitHub/Multilayer_Ecology-letters/Data/Rplant_pol_NI.csv")
+Rplant_pol_I <- read.csv("/Users/agustin/Documents/GitHub/Multilayer_Ecology-letters/Data/Rplant_pol_I.csv")
+Rplant_disp_NI <- read.csv("/Users/agustin/Documents/GitHub/Multilayer_Ecology-letters/Data/Rplant_disp_NI.csv")
+Rplant_disp_I <- read.csv("/Users/agustin/Documents/GitHub/Multilayer_Ecology-letters/Data/Rplant_disp_I.csv")
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                      NI TREATMENT                            
@@ -53,7 +53,7 @@ ntot=nplants+npol+ndisp #Total number of nodes
 pol_indx=1:npol
 disp_indx=(npol+1):(ndisp+npol)
 
-imatrix=rbind(Npol,Ndisp) #nrow=1:95 pol, 96:99 disp
+imatrix=rbind(Npol,Ndisp)
 IM= as.matrix(imatrix)
 
 ####################
@@ -181,7 +181,7 @@ NI_sprole <- read.csv("/Users/agustin/Documents/GitHub/Multilayer_Ecology-letter
 
 NI_roles<- NI_sprole %>%
   group_by(node_id)%>% 
-  dplyr::slice(1) %>% #filter just the first role of the plant (it's more important)
+  dplyr::slice(1) %>% 
   dplyr::select(role)
 
 Propagation_NI<-cbind(Results_final2,roles = NI_roles$role)
@@ -215,7 +215,7 @@ ntot=nplants+npol+ndisp #Total number of nodes
 pol_indx=1:npol
 disp_indx=(npol+1):(ndisp+npol)
 
-imatrix=rbind(Npol,Ndisp) #nrow=1:95 pol, 96:99 disp
+imatrix=rbind(Npol,Ndisp) 
 IM= as.matrix(imatrix)
 
 ####################
@@ -235,7 +235,7 @@ PL.dead.disp=numeric(nsims_p)
 set.seed(999)
 bye.plants=rep(1:nplants,100) #
 
-#Call function Stochastic Coextinction model
+#Call the function Stochastic Coextinction model
 for (i in 1:nsims_p){
   NC=netcascade_multi(as.matrix(IM),rplants_disp,rplants_pol, rpol, rdisp,deadPlants=NULL, deadPols=NULL, deadDisps=NULL,targetGuild='plant',target=bye.plants[i],return.matrix=F)
   PL.degree[i]=max(NC$cascade_data$degree)
@@ -343,7 +343,7 @@ I_sprole <- read.csv("/Users/agustin/Documents/GitHub/Multilayer_Ecology-letters
 
 I_roles<- I_sprole %>%
   group_by(node_id)%>% 
-  dplyr::slice(1) %>% #filter just the first role of the plant (it's more important)
+  dplyr::slice(1) %>% 
   dplyr::select(role)
 
 Propagation_I<-cbind(Results_final2,roles = I_roles$role)
