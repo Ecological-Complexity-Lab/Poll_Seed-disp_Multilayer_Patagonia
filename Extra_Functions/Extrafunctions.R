@@ -517,8 +517,10 @@ netcascade_multi <- function(imatrix,rplants_disp,rplants_pol, rpol, rdisp, dead
 
 
 
-############################# AUC FUNCTION ###################################
-
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#                      6. AUC FUNCTION                           
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#This function calculate the area under the curve (AUC, proxy the robustness) of the species lost against species present in the network
 auc=function(rem,pre){
   y <- pre
   x <- rem
