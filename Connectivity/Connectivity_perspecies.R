@@ -1,14 +1,18 @@
-###########Calculate the presence of plant species connecting layers and their number and proportion
-# of paths (1)
-########### Compare the presence and ability of plants to connect both layers between treatments (2)
+########### 1. Estimation of the presence of plant species connecting layers and their number and proportion of paths 
+
+########### 2. Comparison between treatments
+#-----------------------------------------------------------------------------------------------------------------
+
+########### 1. Estimation of the presence of plant species connecting layers and their number and proportion of paths 
+
 
 library(dplyr)
 library(vegan)
 source('/Users/agustin/Documents/GitHub/Multilayer_Ecology-letters/Extra_Functions/Extrafunctions.R') 
 
-################## (1) ###############
-
-# NI TREATMENT --
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#                      NI TREATMENT                            
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 NI_disp <- read.csv("/Users/agustin/Documents/GitHub/Multilayer_Ecology-letters/Data/NI_disp.csv", sep=",",row.names=1)
 NI_pol<- read.csv("/Users/agustin/Documents/GitHub/Multilayer_Ecology-letters/Data/NI_pol.csv", sep=",",row.names=1)
 
@@ -52,7 +56,9 @@ conn_sp_NI<- conn_sp_NI %>%
   select(Treat,plantesName,P,Connect,Prop_path)
 
 
-# I TREATMENT --
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#                      I TREATMENT                            
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 I_disp <- read.csv("/Users/agustin/Documents/GitHub/Multilayer_Ecology-letters/Data/I_disp.csv", sep=",",row.names=1)
 I_pol <- read.csv("/Users/agustin/Documents/GitHub/Multilayer_Ecology-letters/Data/I_pol.csv", sep=";",row.names=1)
 
@@ -99,7 +105,10 @@ conn_sp_I<- conn_sp_I %>%
 conn_sp<-rbind(conn_sp_NI,conn_sp_I)
 
 
-################## (2) ###############
+#-----------------------------------------------------------------------------------------------------------------
+
+########### 2. Comparison between treatments 
+
 library(tidyverse)
 library(lme4)
 library("stats4")
