@@ -1,9 +1,9 @@
-########### 1. Estimation of the presence of plant species connecting layers and their number and proportion of paths 
+########### 1. Estimation of the presence of plant species connecting layers and their proportion of indirect links
 
 ########### 2. Comparison between treatments
 #-----------------------------------------------------------------------------------------------------------------
 
-########### 1. Estimation of the presence of plant species connecting layers and their number and proportion of paths 
+########### 1. Estimation of the presence of plant species connecting layers and their proportion of indirect links 
 
 
 library(dplyr)
@@ -35,7 +35,7 @@ Edges=files$Edges.info
 Nodes=files$Nodes.info
 Layers=files$Layers.info
 
-#Call function to calculate the number of path per plant species
+#Call function to calculate the number of indirect links per plant species
 plantesName= colnames(Ndisp)
 wp=which(plantesName %in% Nodes$name_node)
 Edges2=Edges %>% select(node_from,layer_from,node_to,layer_to,weight)
@@ -52,7 +52,7 @@ conn_sp_NI$N_disp<- as.integer(conn_sp_NI$N_disp)
 conn_sp_NI$P<- as.integer(conn_sp_NI$P)
 conn_sp_NI<- conn_sp_NI %>% 
   mutate (Connect= ifelse(P == 0, 0,1), #Calculate the presence of plant connecting layer
-          Prop_path = P / (nrow(NI_pol) * nrow(NI_disp) )) %>% #calculate theproportion of paths per plant sp
+          Prop_path = P / (nrow(NI_pol) * nrow(NI_disp) )) %>% #calculate the proportion of indirect links per plant sp
   select(Treat,plantesName,P,Connect,Prop_path)
 
 
@@ -81,7 +81,7 @@ Edges=files$Edges.info
 Nodes=files$Nodes.info
 Layers=files$Layers.info
 
-#Call function to the number of path per plant species
+#Call function to calculate the number of indirect links per plant species
 plantesName= colnames(Ndisp)
 wp=which(plantesName %in% Nodes$name_node)
 Edges2=Edges %>% select(node_from,layer_from,node_to,layer_to,weight)
@@ -98,7 +98,7 @@ conn_sp_I$N_disp<- as.integer(conn_sp_I$N_disp)
 conn_sp_I$P<- as.integer(conn_sp_I$P)
 conn_sp_I<- conn_sp_I %>% 
   mutate (Connect= ifelse(P == 0, 0,1), #Calculate the presence of plants connecting layers
-          Prop_path = P / (nrow(I_pol) * nrow(I_disp) )) %>% #calculate the proportion of paths per plant sp
+          Prop_path = P / (nrow(I_pol) * nrow(I_disp) )) %>% #calculate the proportion of indirect links per plant sp
   select(Treat,plantesName,P,Connect,Prop_path)
 
 #final matrix
@@ -133,44 +133,15 @@ boxplot(E1_lme~conn_sp$Treat, main="Tratamiento")
 conn_sp <-conn_sp%>% 
   filter(P>0)#filter only plants connecting layers
 
-#Number of path per species
-m2<- glmer.nb (P ~ Treat + ( 1| plantesName), data = conn_sp)
-summary(m2)
-
-#overdispersion
-overdisp_fun<- function(model) {
-  vpars<- function(m) {
-    nrow(m)*(nrow(m)+1)/2 
-  }
-  model.df<- sum(sapply(VarCorr(model),vpars))+length(fixef(model)) 
-  (rdf<- nrow(model@frame)-model.df)
-  rp<- residuals(model)
-  Pearson.chisq<- sum(rp^2)
-  prat<- Pearson.chisq/rdf
-  pval<- pchisq(Pearson.chisq, df=rdf, lower.tail=FALSE,log.p=TRUE) 
-  c(chisq=Pearson.chisq,ratio=prat,p=exp(pval))
-}
-overdisp_fun(m2)
-
-#Homogeneity 
-EM<-resid(m2, type= "deviance") 
-FM<-fitted(m2) 
-plot(x=FM, y=EM, xlab = "Ajustados", ylab = "Residuales normalizados")
-abline(0,0, col="red", lwd= 3) 
-
-#Independence 
-boxplot(EM~conn_sp$Treat, main="Tratamiento") 
-
-
-#Prop of paths per species 
+#Prop of indirect links per species 
 library(glmmTMB)
 
-m3<-glmmTMB(Prop_path~ Treat + ( 1| plantesName),beta_family(link = "logit"), data = conn_sp)
-summary(m3) 
+m2<-glmmTMB(Prop_path~ Treat + ( 1| plantesName),beta_family(link = "logit"), data = conn_sp)
+summary(m2) 
 
 #Homogeneity 
-EM<-resid(m3, type= "pearson") 
-FM<-fitted(m3)
+EM<-resid(m2, type= "pearson") 
+FM<-fitted(m2)
 plot(x=FM, y=EM, xlab = "Ajustados", ylab = "Residuales normalizados")
 abline(0,0, col="red", lwd= 3) 
 

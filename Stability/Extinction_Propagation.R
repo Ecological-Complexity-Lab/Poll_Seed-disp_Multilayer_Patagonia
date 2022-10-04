@@ -396,7 +396,7 @@ cld(lsm,
     Letters=letters)
 
 #Plot--
-ext_order=ggplot(Propagation)+geom_boxplot(aes(y=porcDeadTot,x=roles,fill=Treat))+
+ext_order=ggplot(Propagation)+geom_boxplot(aes(y=porcDeadTot,x=roles,fill=Treat),  position = position_dodge2(preserve = "single"))+
   scale_fill_manual(values=c("cornflowerblue","orange2"))+
   scale_x_discrete(name="Topological role")+
   scale_y_continuous(name = "Percentage of extinct species")+
@@ -411,7 +411,7 @@ ext_order=ggplot(Propagation)+geom_boxplot(aes(y=porcDeadTot,x=roles,fill=Treat)
 ext_order
 
 
-#Extinction percentage for each trophic group--
+####Extinction percentage for each trophic group-- (Extra analysis appendix S3)
 
 #Compare if pollinators that goes extinct after the removal of a species change according to the 
 #trophic group and treatment----

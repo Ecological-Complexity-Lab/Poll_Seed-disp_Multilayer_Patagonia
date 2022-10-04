@@ -2,13 +2,13 @@
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                      1. CONNECTIVITY INDEX                            
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#this function calculates the number of path per plant species connecting layers and the number of pollinators and seed dispersers 
+#this function calculates the number of indirect links mediated per plant species and the number of pollinators and seed dispersers 
 #interacting with the plant 
 
 Connectivityindex=function(wp,edges.list)
 {
-  Nplants= length(wp) #vector containing plant species
-  P=numeric(Nplants) #Number of paths per plant
+  Nplants= length(wp) #Vector containing plant species
+  P=numeric(Nplants) #Vector containing number of indirect links per plant
   N_pol= numeric(Nplants) #Number of pollinators interacting with the plant
   N_disp= numeric(Nplants)#Number of seed dispersers interacting with the plant
   
@@ -19,7 +19,7 @@ Connectivityindex=function(wp,edges.list)
     Nperlayer=Nperlayer$N 
     if (length(Nperlayer)>1) #if the plant interacts with more than one layer
     {
-      P[j]=Nperlayer[1]*Nperlayer[2] #calculate its number of paths between layers
+      P[j]=Nperlayer[1]*Nperlayer[2] #calculate the number of indirect links connecting both layers mediated by the plant
     }
     N_pol[j]= Nperlayer[1]
     N_disp[j]= Nperlayer[2]
@@ -146,11 +146,11 @@ CreateFiles=function(networkD,networkP)
     D[j]=as.numeric(Extend2 %>% filter(node_from ==nodeP)  %>% summarise(n = n())) 
   } 
   
-  W = P*D #number of path per plant species connecting both layers
+  W = P*D #number of indirect links connecting both layers mediated by the plant
   
   cuan.inter=length(quienes.inter)
   for (i in seq_along(W)){
-    cuan.inter[i] = W[i]/ (n.polinizadores*n.dispersores)#calculate the proportion of path per plant species 
+    cuan.inter[i] = W[i]/ (n.polinizadores*n.dispersores)#calculate the proportion of indirect links mediated per plant species 
   }
   
   #dataframe containing interlayer edges
