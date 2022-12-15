@@ -6,15 +6,15 @@
 library(infomapecology)
 library(dplyr)
 library(vegan)
-source('/Users/agustin/Documents/GitHub/Multilayer_Ecology-letters/Extra_Functions/Extrafunctions.R')
+source('./Extra_Functions/Extrafunctions.R')
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                      NI TREATMENT                            
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ###### 1. Estimation of the number of modules in the network for each treatment--
-NI_disp <- read.csv("/Users/agustin/Documents/GitHub/Multilayer_Ecology-letters/Data/NI_disp.csv", sep=",",row.names=1)
-NI_pol  <- read.csv("/Users/agustin/Documents/GitHub/Multilayer_Ecology-letters/Data/NI_pol.csv", sep=",",row.names=1)
+NI_disp <- read.csv("./Data/NI_disp.csv", sep=",",row.names=1)
+NI_pol  <- read.csv("./Data/NI_pol.csv", sep=",",row.names=1)
 
 Npol<-NI_pol
 Ndisp<-NI_disp
@@ -126,16 +126,69 @@ Mod.null_NI<- ggplot(Sim_Results$Sim_Results)+geom_bar(aes(x=M), fill = "cornflo
 Mod.null_NI
 
 
+# Plot NI Multilayer networks ----                         
+#~~~~~~~~~~~~~~~~~~~~~~~~~~
+# plot using igraph a quapartide network for both biprtite layers
+# polls -> plants1 -- plants2 -> destrib
 
+# The groups:
+# plants: 1-37
+# pollinators: 38-132
+# seed distributes: 133-136
 
+pols <- Nodes %>% filter(node_id > 37 & node_id < 133)  %>% 
+        add_column(colour="orange") %>%
+        mutate(label = node_id, node_id = paste("1_", node_id, sep = ""))
+plnt1 <- Nodes %>% filter(node_id <= 37) %>% 
+        add_column(colour="palegreen") %>%
+        mutate(label = node_id, node_id = paste("1_", node_id, sep = ""))
+plnt2 <- Nodes %>% filter(node_id <= 37) %>% 
+        add_column(colour="palegreen") %>%
+        mutate(label = node_id, node_id = paste("2_", node_id, sep = ""))
+dist <- Nodes %>% filter(node_id >= 133)  %>% 
+        add_column(colour="plum1")%>%
+        mutate(label = node_id, node_id = paste("2_", node_id, sep = ""))
+
+pols$x <- 0
+plnt1$x <- 0.5
+plnt2$x <- 1
+dist$x <- 1.5
+
+pols$y <- (nrow(pols):1)*20/nrow(pols) 
+plnt1$y <- (nrow(plnt1):1)*20/nrow(plnt1)
+plnt2$y <- (nrow(plnt2):1)*20/nrow(plnt2)
+dist$y <- (nrow(dist):1)*5/nrow(dist) + 7.5
+
+flat_nodes <- rbind(plnt1, plnt2, pols, dist)
+
+flat_edges <- Edges %>% 
+        mutate(colour=case_when(layer_from==layer_to ~ 'black',
+                                layer_from!=layer_to ~ 'steelblue1')) %>%
+        mutate(from = paste(layer_from, "_", node_from, sep = "")) %>%
+        mutate(to = paste(layer_to, "_", node_to, sep = "")) %>% 
+        select(from, to, weight, colour)
+
+net <- igraph::graph_from_data_frame(flat_edges, directed = FALSE, vertices = flat_nodes)
+pdf("./Modularity/ni_mln.pdf")
+plot.igraph(net,  axes = FALSE, vertex.frame.color = "gray20",
+            vertex.label = NA,
+            vertex.size = 5,
+            vertex.color = flat_nodes$colour,
+            edge.width = flat_edges$weight*30,
+            edge.color = flat_edges$colour,
+            main = "Not Invaded Network")#,
+#            margin = c(-0.3,-0.15,-0.2,-0.15))
+dev.off()
+
+# ----
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                      I TREATMENT                            
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ###### 1. Estimation of the number of modules in the network for each treatment--
-I_disp<- read.csv("/Users/agustin/Documents/GitHub/Multilayer_Ecology-letters/Data/I_disp.csv", sep=",",row.names=1)
-I_pol <- read.csv("/Users/agustin/Documents/GitHub/Multilayer_Ecology-letters/Data/I_pol.csv", sep=";",row.names=1)
+I_disp<- read.csv("./Data/I_disp.csv", sep=",",row.names=1)
+I_pol <- read.csv("./Data/I_pol.csv", sep=";",row.names=1)
 
 Npol<-I_pol
 Ndisp<-I_disp
@@ -252,3 +305,58 @@ Mod.null_I<- ggplot(Sim_Results$Sim_Results)+geom_bar(aes(x=M), fill = "orange2"
         axis.text= element_text(size= 18, colour = "black"))
 Mod.null_I
 
+
+# Plot I Multilayer networks ----                         
+#~~~~~~~~~~~~~~~~~~~~~~~~~~
+# plot using igraph a quapartide network for both biprtite layers
+# polls -> plants1 -- plants2 -> destrib
+
+# Prepare the groups:
+# plants: 1-24
+# pollinators: 25-91
+# seed distributes: 92-94
+
+pols <- Nodes %>% filter(node_id > 24 & node_id < 92)  %>% 
+  add_column(colour="orange") %>%
+  mutate(label = node_id, node_id = paste("1_", node_id, sep = ""))
+plnt1 <- Nodes %>% filter(node_id <= 24) %>% 
+  add_column(colour="palegreen") %>%
+  mutate(label = node_id, node_id = paste("1_", node_id, sep = ""))
+plnt2 <- Nodes %>% filter(node_id <= 24) %>% 
+  add_column(colour="palegreen") %>%
+  mutate(label = node_id, node_id = paste("2_", node_id, sep = ""))
+dist <- Nodes %>% filter(node_id >= 92)  %>% 
+  add_column(colour="plum1")%>%
+  mutate(label = node_id, node_id = paste("2_", node_id, sep = ""))
+
+pols$x <- 0
+plnt1$x <- 0.5
+plnt2$x <- 1
+dist$x <- 1.5
+
+pols$y <- (nrow(pols):1)*20/nrow(pols) 
+plnt1$y <- (nrow(plnt1):1)*20/nrow(plnt1)
+plnt2$y <- (nrow(plnt2):1)*20/nrow(plnt2)
+dist$y <- (nrow(dist):1)*5/nrow(dist) + 7.5
+
+flat_nodes <- rbind(plnt1, plnt2, pols, dist)
+
+flat_edges <- Edges %>% 
+  mutate(colour=case_when(layer_from==layer_to ~ 'black',
+                          layer_from!=layer_to ~ 'steelblue1')) %>%
+  mutate(from = paste(layer_from, "_", node_from, sep = "")) %>%
+  mutate(to = paste(layer_to, "_", node_to, sep = "")) %>% 
+  select(from, to, weight, colour)
+
+net <- igraph::graph_from_data_frame(flat_edges, directed = FALSE, vertices = flat_nodes)
+pdf("./Modularity/i_mln.pdf")
+plot.igraph(net,  axes = FALSE, vertex.frame.color = "gray20",
+            vertex.label = NA,# V(net)$label, #vertex.label.color = "gray20",
+            vertex.size = 5, #vertex.size2 = 30,
+            vertex.color = flat_nodes$colour,
+            edge.width = flat_edges$weight*30,
+            edge.color = flat_edges$colour,
+            #edge.curved = T,
+            main = "Invaded Network")#,
+#            margin = c(-0.3,-0.15,-0.2,-0.15))
+dev.off()
